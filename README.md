@@ -166,61 +166,105 @@ bs.R を実行して、out_dir に結果が保存されていること（RDS / C
 
 ## bs3D.R
 bs3D.R は、bs.R のパラメトリック・ブートストラップを拡張して、最終時刻だけでなく
+
 ・時刻 t
+
 ・擬似空間の位置 LOCnorm
+
 ・difficulty（マーク）m の 
+
 3D格子上でλ(T,z,m)=s(m)λz(t,z) などの値を計算し、**分位点CI（percentile）**を作ったり、3Dサーフェスや帯（band）として可視化するためのスクリプトです。
+
 前提（依存関係）
+
 中で以下の関数を使う想定です（同一ディレクトリ推奨）。
+
 ・fit_etas_mu_Aapc()（推定）：algoA.R
+
 ・simulate_etas_modified()（疑似データ生成）：GenerateData.R
+
 ・calc_lambdaZ_grid(), lambda_z_at_time_allz(), s_gr_trunc_pmf() など：funclist.R
 
 ## RunEstimate.R
 RunEstimate.R は、提案モデル（ETAS 風自己励起型点過程）の 推定処理をまとめて実行するための実行用スクリプトです。
 「データ準備 → 推定（EM風反復） → 結果保存（mu・history・推定パラメータ）」の流れを、1本のスクリプトとして回す用途で使います。
+
 前提（依存関係）
+
 RunEstimate.R は、推定本体やカーネル計算を利用するため、同一ディレクトリに以下がある前提で使うのが安全です。
+
 ・algoA.R（推定：fit_etas_mu_Aapc()）
+
 ・funclist.R（擬似空間符号化・カーネル・強度計算など）
+
 （データを生成してから推定する場合）GenerateData.R
+
 使い方
+
 1) データを用意する
+
 実データを読み込む、または GenerateData.R で疑似データを作成します。
 データ形式は以下を想定します：
+
 ・time_t
+
 ・moduleID_x
+
 ・LOCnorm_y
+
 ・difficulty_m
+
 2) 推定を実行する
+
 RunEstimate.R を実行すると、内部で fit_etas_mu_Aapc() を呼び出して推定します。
 
 ## coverage_r.R
 coverage_r.R は、シミュレーション実験で作った信頼区間（CI）について、真値（真のパラメータ／真の強度など）をどれだけ含めているかを定量評価するためのスクリプトです。
 特に、パラメトリック・ブートストラップ（例：bs.R, bs3D.R）で構成した CI の coverageを計算・集計します。
+
 前提（先に用意しておくもの）
+
 シミュレーションで 真値（true） が分かっていること
+
 ・例：theta_true（A, α, p, c 等）、真の μ、真の λ/Λ など
+
 ブートストラップ結果（CI）が保存されていること
+
 ・例：bootstrap_result_with_lambda.rds、boot_theta.csv、lambdaZ_T_CI.csv、lambdaZM_T_CI_m_*.csv など
+
 （どれを使うかはスクリプト内の読み込み設定に依存）
+
 使い方
+
 ・保存済みのCI結果を読み込んで、真値がCIに入っているかを判定し、カバレッジを計算します。
 （スクリプト内の out_dir やファイル名を、あなたの保存先に合わせてください。）
 
 ## RunCov.R
 RunCov.R は、シミュレーション実験における coverage（被覆率）評価をまとめて実行するための実行用スクリプトです。
 主に coverage_r.R の関数や処理を呼び出して、
+
 ・どの設定（例：パラメータ設定、乱数種、B回数、格子設定など）で
+
 ・どの出力フォルダ（out_dir）の結果に対して
+
 ・どの被覆（パラメータ／強度／断面／3D格子など）を
+
 評価するかを指定し、一括で計算・保存します。
+
 前提（依存関係）
+
 coverage_r.R（計算の本体）
+
 ・RunCov.R から source("coverage_r.R") して使う想定です。
+
 （評価対象の結果が必要）
+
 ・bs.R / bs3D.R 等で作ったブートストラップ結果（RDS/CSV）が out_dir に保存されていること
+
 （真値が必要）
+
 ・theta_true や真の μ、真の λ/Λ 等が RunCov.R 内で用意されている、または読み込めること
+
 使い方
+
 ・coverage を取りたい結果フォルダや設定を RunCov.R 内で指定し、実行します。
