@@ -4,7 +4,7 @@
 
 **Multi Dim Interval Estimation**は，ソフトウェアフォールト発見メトリクスデータから，パラメトリック・ブートストラップ方法を利用して区間推定を実行するプログラムです．
 
-# Multi Dim Interval Estimationの使い方(反復推定部分)
+# Multi Dim Interval Estimationの使い方
 ## funclist.R
 funclist.R は、提案モデル（ETAS 風自己励起型点過程）を構成する **基本関数群（時間・マーク・擬似空間カーネル、強度計算の補助、可視化）**をまとめたファイルです。
 推定スクリプト（例：algoA.R）から source("funclist.R") して利用します。
