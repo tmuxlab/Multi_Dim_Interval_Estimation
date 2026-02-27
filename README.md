@@ -19,6 +19,7 @@ funclist.R は、提案モデル（ETAS 風自己励起型点過程）を構成�
 ## AlgoA.R
 algoA.R は、提案している 自己励起型点過程（ETAS 風）モデルのパラメータ推定（EM 風反復）を実行するスクリプトです。
 内部で funclist.R を source("funclist.R") しているため、同じディレクトリに funclist.R が必要です。
+
 依存関係
  funclist.R（必須）
  ・encode_loc(), hamming_code() など、擬似空間の符号化・距離計算系を利用します。
@@ -26,81 +27,141 @@ algoA.R は、提案している 自己励起型点過程（ETAS 風）モデル
 ## GenerateData.R
 GenerateData.R は、提案している 自己励起型点過程（ETAS 風）モデルに基づいて、疑似データ（イベント列）を生成するためのスクリプトです。
 出力は、推定側（例：algoA.R の fit_etas_mu_Aapc()）がそのまま受け取れる形式のデータフレームになります。
+
 出力列（イベントデータ）
+
 time_t：イベント時刻
+
 moduleID_x：モジュールID（0–3想定）
+
 LOCnorm_y：0–1正規化された位置指標（擬似空間用）
+
 difficulty_m：難易度（マグニチュード相当）
+
 依存関係
  algoA.R（GenerateData.R の先頭で source("algoA.R") しています）
+ 
  ・さらに algoA.R 側で funclist.R を利用する想定です（同じディレクトリ推奨）。
+
 使い方
+ 
  ・同じディレクトリで以下を実行し、疑似データ生成関数を読み込みます。
 
 ## bs.R
 bs.R は、提案モデル（ETAS 風自己励起型点過程）に対して パラメトリック・ブートストラップを行い、
+
 ・パラメータ(A,α,p,c) の パーセンタイル信頼区間
+
 ・最終時刻Tにおける擬似空間強度λz(T,z) の 信頼区間
+
 ・さらに difficulty（マーク）で切ったλ(T,z,m)=s(m)λz(T,z) の 断面CI
+
 をまとめて出力・保存するスクリプトです。
+
 依存関係
  bs.R は以下の関数を使うため、事前に読み込める状態が必要です。
+ 
  ・fit_etas_mu_Aapc()（推定）：algoA.R
+ 
  ・simulate_etas_modified()（疑似データ生成）：GenerateData.R
+ 
  ・lambda_z_at_time_allz(), s_gr_trunc_pmf() など：funclist.R
+
 実運用では、algoA.R / GenerateData.R 側で source() されている想定でもOKですが、同一ディレクトリに揃えておくのが安全。
 
 ## bs_after_plot.R
 bs_after_plot.R は、bs.R（パラメトリック・ブートストラップ）で保存した結果を読み込み、推定結果・信頼区間・被覆状況などを図として確認するための後処理スクリプトです。
 「推定→ブート→CI作成」まで終えた後に、確認用のプロットをまとめて出す用途で使います。
+
 前提（先に実行しておくもの）
 bs.R を実行して、結果（例：bootstrap_result_with_lambda.rds や各種 .csv）が out_dir に保存されていること
 描画に使うため、推定・カーネル・強度計算の関数が必要な場合があります（環境により以下を source()）
+
  ・funclist.R
+
  ・algoA.R
+
  ・GenerateData.R
+
 使い方
+
 ・保存済みのブート結果（RDS や CSV）を読み込んでプロットします。
+
 （スクリプト内で readRDS() / read.csv() している箇所の out_dir を、あなたの保存先に合わせて変更してください。）
+
 このスクリプトで確認できること（例）
+
 パラメータ (A,α,p,c) の
+
 ・ブートストラップ分布（ヒストグラム等）
+
 ・percentile CI の位置
+
 ・真値（シミュレーション真値がある場合）との比較
+
 最終時刻 T における
+
 ・λz(T,z) の点推定と CI（擬似空間セル z ごと）
+
 ・m で切ったλ(T,z,m)=s(m)λz(T,z) の断面 CI
+
 （シミュレーション実験の場合）
+
 ・被覆（coverage） の確認（CI が真値を含むかどうか）
+
 入出力の対応
+
 入力：bs.R が保存した
+
 ・bootstrap_result_with_lambda.rds
+
 ・lambdaZ_T_CI.csv
+
 ・lambdaZM_T_CI_m_*.csv
+
 ・boot_theta.csv など
+
 出力：図（画面表示、または png() などでファイル保存）
 
 ## bs_after_Number.R
 bs_after_Number.R は、bs.R（パラメトリック・ブートストラップ）で作成した推定結果を使って、イベント個数に関する量（例：累積期待個数 Λ(t)、最終時刻までの期待個数、またはそれに準ずる集計量）を計算・整理するための後処理スクリプトです。
 強度 λ の CI だけでなく、**「時刻 t までにどれくらい発生するか」**の不確実性（CI）を見たいときに使います。
+
 前提（先に実行しておくもの）
+
 bs.R を実行して、out_dir に結果が保存されていること（RDS / CSV）
+
 例：bootstrap_result_with_lambda.rds、boot_theta.csv、mu_hat.csv など
+
 必要に応じて以下の関数群を読み込める状態（環境により source()）
+
 ・funclist.R（強度計算・カーネル等）
+
 ・algoA.R（推定器の返り値構造など）
+
 ・GenerateData.R（シミュレーション真値がある場合など）
+
 使い方
+
 保存済み結果を読み込み、個数系の指標を計算します。
 （スクリプト内の out_dir をあなたの保存先に合わせて変更してください。）
+
 入出力の対応
+
 入力：bs.R が保存した
+
 ・bootstrap_result_with_lambda.rds
+
 ・boot_theta.csv
+
 ・mu_hat.csv
+
 （必要なら）元データ data_original.csv
+
 出力：
+
 ・代表時点でのΛ(t) 点推定＋CI（CSVやRオブジェクト）
+
 ・coverage や幅（interval width）の集計（必要なら）
 
 ## bs3D.R
